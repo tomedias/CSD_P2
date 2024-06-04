@@ -16,10 +16,10 @@ csv_files = [
     for filename in os.listdir(directory_path)
     if filename.endswith(".csv")
 ]
-indentifiers = []
+identifiers = []
 
 for file in csv_files:
     data = pd.read_csv(file)
     identifier = get_identifier(data)
     if identifier:
-        indentifiers.append(identifier)
+        identifiers.append(identifier)
