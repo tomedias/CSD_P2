@@ -1,9 +1,11 @@
 # Confiabilidade de Sistemas Distribuídos 2023-24
 
-## Setup
+## Project 2 | Option 2
+ 
+### Setup
 
-## Linkage Attack
+### Linkage Attack
 
-## K-Anonimity
+### K-Anonimity
 
-## Differential Privacy
+### Differential Privacy
