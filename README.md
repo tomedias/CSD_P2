@@ -1,6 +1,6 @@
 # Confiabilidade de Sistemas Distribuídos 2023-24
 
-## Setup
+### Setup
 
 ## Linkage Attack
 
