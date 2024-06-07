@@ -4,6 +4,6 @@
 
 ## Linkage Attack
 
-## k-Anonimity
+## K-Anonimity
 
 ## Differential Privacy
