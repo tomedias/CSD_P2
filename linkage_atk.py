@@ -1,24 +1,24 @@
 import pandas as pd
 import argparse
-import numpy as np
-import matplotlib.pyplot as plt
 
-def main(marriage_file,earning_file,sti_file):
 
+def main(marriage_file, earning_file, sti_file):
     marriage_data = pd.read_csv("marriage_data.csv")
     earning_data = pd.read_csv("earning_data.csv")
     sti_data = pd.read_csv("sti_data.csv")
 
-    merge_earning_sti = pd.merge(earning_data, sti_data, on=['Date of Birth','Education Status'],how='inner')
-    merge_all = pd.merge(merge_earning_sti, marriage_data, on=['Postal Code','Occupation'],how='inner')
-    #merge_final = pd.merge(merge_earning_sti, marriage_data, on=['Postal Code'],how='inner')
-    nif_count = merge_all['NIF'].value_counts()
-    #nif_count.hist()
-    #plt.show()
+    merge_earning_sti = pd.merge(
+        earning_data, sti_data, on=["Date of Birth", "Education Status"], how="inner"
+    )
+    merge_all = pd.merge(
+        merge_earning_sti, marriage_data, on=["Postal Code", "Occupation"], how="inner"
+    )
+    # merge_final = pd.merge(merge_earning_sti, marriage_data, on=['Postal Code'],how='inner')
+    nif_count = merge_all["NIF"].value_counts()
+    # nif_count.hist()
+    # plt.show()
 
-
-    merge_final = merge_all[merge_all['NIF'].isin(nif_count[nif_count==1].index)]
-
+    merge_final = merge_all[merge_all["NIF"].isin(nif_count[nif_count == 1].index)]
 
     output_path1 = "./unique_data.csv"
     output_path2 = "./reidentified.csv"

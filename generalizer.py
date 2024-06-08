@@ -1,7 +1,4 @@
 import pandas as pd
-import argparse
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 def generalize_year(date_str):
