@@ -212,7 +212,7 @@ def execute_query(cursor, query: str):
                 query.__dict__[field] = fun(sum, count)
             else:
                 fun = new_function_map.get(field)
-                query.__dict__[field] = fun(sum, count)
+                query.__dict__[field] = fun(query.__dict__[field])
     return new_query_result
 
 
