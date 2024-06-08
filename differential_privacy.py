@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 
 # We chose a low value of 1 for the privacy budget to guarantee strong privacy due to the sensitivity of the data (STIs)
-EPSILON = 1
+EPSILON = 1.0
 
 DATE_FORMAT = "%d/%m/%Y"
 
@@ -20,10 +20,22 @@ class Sensitivity:
     MONTH_SENSITIVITY = 11  # 12 - 1
     DECEASE_SENSITIVITY = 1  # 1 - 0
 
+def expended_budget(epsilon):
+    global EPSILON
+    if(EPSILON <= 0.0):
+        raise Exception("Budget exceeded")
+    if((EPSILON - epsilon) < 0.0):
+        raise Exception("Budget exceeded")
 
 def calculate_sensitivity(data):
     return data.max() - data.min()
 
+def laplace_mech(v, sensitivity, epsilon):
+    global EPSILON
+    expended_budget(epsilon)
+    EPSILON -= epsilon
+    return v + np.random.laplace(loc=0, scale=sensitivity / epsilon)
+    
 
 def date_of_birth(date):
     date_object = datetime.strptime(date, DATE_FORMAT)
@@ -42,25 +54,23 @@ def date_of_birth(date):
         if date_object.year > 2049
         else date_object.year
     )
-    new_day = laplace_mech(day < 0, Sensitivity.DAY_SENSITIVITY, EPSILON)
-    new_month = laplace_mech(month, Sensitivity.MONTH_SENSITIVITY, EPSILON)
-    new_year = laplace_mech(year, Sensitivity.YEAR_SENSITIVITY, EPSILON)
+    new_day = laplace_mech(day < 0, Sensitivity.DAY_SENSITIVITY, 1)
+    new_month = laplace_mech(month, Sensitivity.MONTH_SENSITIVITY, 1)
+    new_year = laplace_mech(year, Sensitivity.YEAR_SENSITIVITY, 1)
     return "{}/{}/{}".format(int(new_day), int(new_month), int(new_year))
 
 
 def post_code(postal_code):
-    return laplace_mech(postal_code, Sensitivity.POSTAL_CODE_SENSITIVITY, EPSILON)
+    return laplace_mech(postal_code, Sensitivity.POSTAL_CODE_SENSITIVITY, 1)
 
 
 def education_status(education_status):
     return laplace_mech(
-        education_status, Sensitivity.EDUCATION_STATUS_SENSITIVITY, EPSILON
-    )
+        education_status, Sensitivity.EDUCATION_STATUS_SENSITIVITY, 1)
 
 
 def chlamydia(chlamydia):
     return laplace_mech(chlamydia, Sensitivity.DECEASE_SENSITIVITY, 0.1)
-
 
 def gonorrhea(gonorrhea):
     return laplace_mech(gonorrhea, Sensitivity.DECEASE_SENSITIVITY, 0.1)
@@ -75,15 +85,15 @@ def sum_decease(value):
 
 
 def sum_education_status(value):
-    return laplace_mech(value, Sensitivity.EDUCATION_STATUS_SENSITIVITY, EPSILON)
+    return laplace_mech(value, Sensitivity.EDUCATION_STATUS_SENSITIVITY, 0.1)
 
 
 def sum_postal_code(value):
-    return laplace_mech(value, Sensitivity.POSTAL_CODE_SENSITIVITY, EPSILON)
+    return laplace_mech(value, Sensitivity.POSTAL_CODE_SENSITIVITY, 0.1)
 
 
 def count(value):
-    return laplace_mech(value, 1, EPSILON)
+    return laplace_mech(value, 1, 0.1)
 
 
 def avg_decease(sum, count_value):
@@ -154,11 +164,6 @@ def create_function_map(renamed_fields):
         ]
     return new_function_map
 
-
-def laplace_mech(v, sensitivity, epsilon):
-    return v + np.random.laplace(loc=0, scale=sensitivity / epsilon)
-
-
 def create_dynamic_class_instance(class_name, field_names, row):
     class_obj = type(class_name, (object,), {})
     instance = class_obj()
@@ -227,26 +232,28 @@ def execute_commands(conn):
 
 
 def main(sti_data):
-    data = pd.read_csv(sti_data)
-    Sensitivity.POSTAL_CODE_SENSITIVITY = calculate_sensitivity(data["Postal Code"])
-    Sensitivity.EDUCATION_STATUS_SENSITIVITY = calculate_sensitivity(
-        data["Education Status"]
-    )
-    with sqlite3.connect("sti_data.db") as conn:
+    try:
+        data = pd.read_csv(sti_data)
+        Sensitivity.POSTAL_CODE_SENSITIVITY = calculate_sensitivity(data["Postal Code"])
+        Sensitivity.EDUCATION_STATUS_SENSITIVITY = calculate_sensitivity(
+            data["Education Status"]
+        )
+        conn =  sqlite3.connect("sti_data.db")
         data.to_sql("sti", conn, if_exists="replace", index=False)
         execute_commands(conn)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+        os.remove("sti_data.db")
 
 
 if __name__ == "__main__":
-    try:
-        parser = argparse.ArgumentParser(description="Differential Privacy.")
-        parser.add_argument(
-            "sti_data",
-            help="Path to the sti_data data file.",
-        )
-        args = parser.parse_args()
-        main(args.sti_data)
-        os.remove("sti_data.db")
-    except Exception as e:
-        print(e)
-        os.remove("sti_data.db")
+    parser = argparse.ArgumentParser(description="Differential Privacy.")
+    parser.add_argument(
+        "sti_data",
+        help="Path to the sti_data data file.",
+    )
+    args = parser.parse_args()
+    main(args.sti_data)
+    
