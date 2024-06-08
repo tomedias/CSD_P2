@@ -3,3 +3,4 @@ unique_data.csv
 reidentified.csv
 sti_data_anon.csv
 __pycache__
+sti_data.db
