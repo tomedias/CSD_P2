@@ -1,8 +1,9 @@
 import pandas as pd
+import argparse
 
 
 def generalize_year(date_str):
-    day, month, year = date_str.split("/")
+    _, month, year = date_str.split("/")
     generalized_date = f"00/{month}/{year}"
     new_year = round(int(year) / 10) * 10
     generalized_date = generalized_date.replace(year, str(new_year))
@@ -11,7 +12,7 @@ def generalize_year(date_str):
 
 
 def generalize_year2(date_str):
-    day, month, year = date_str.split("/")
+    _, month, year = date_str.split("/")
     generalized_date = f"00/{month}/{year}"
     new_year = round(int(year) / 50) * 50
     generalized_date = generalized_date.replace(year, str(new_year))
@@ -20,7 +21,7 @@ def generalize_year2(date_str):
 
 
 def generalize_month(date_str):
-    day, month, year = date_str.split("/")
+    _, month, year = date_str.split("/")
     generalized_date = f"00/{month}/{year}"
     new_month = old_month = int(month)
     if 1 <= old_month <= 3:
@@ -55,7 +56,15 @@ def generalize(df):
     df["Postal Code"] = df["Postal Code"].apply(lambda x: x[:2] + "XX")
 
 
-data = pd.read_csv("sti_data.csv")
-generalize(data)
-output_path = "./sti_data_anon.csv"
-data.to_csv(output_path, index=False)
+def main(sti_data):
+    data = pd.read_csv(sti_data)
+    generalize(data)
+    output_path = "./sti_data_anon.csv"
+    data.to_csv(output_path, index=False)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generalizer.")
+    parser.add_argument("sti_data", help="Path to the sti_data file to generalize.")
+    args = parser.parse_args()
+    main(args.sti_data)

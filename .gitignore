@@ -1,7 +1,5 @@
-lib
-include
-lib64
 local_python_environment
 unique_data.csv
 reidentified.csv
 sti_data_anon.csv
+__pycache__
