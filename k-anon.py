@@ -4,7 +4,6 @@ import pandas as pd
 
 def isKAnonymized(df, k):
     quasi_ids = ["Date of Birth", "Postal Code", "Education Status"]
-    unique_entries = []
     for _, row in df.iterrows():
         query_parts = []
         for col in quasi_ids:
@@ -25,23 +24,18 @@ def isKAnonymized(df, k):
             print(e)
             return False
         if rows.shape[0] < k:
-            unique_entries.append(row)
-    if unique_entries:
-        print("Unique entries that do not meet k-anonymity:")
-        for entry in unique_entries:
-            print(entry)
-        return False
+            print(row) #for debugging purposes
+            return False
     return True
 
 
 def main(data_file, k_value):
     data = pd.read_csv(data_file)
-    print(data.columns)
 
     if isKAnonymized(data, int(k_value)):
-        print("All good")
+        print(f"The dataset is already {k_value}-anonymous")
     else:
-        print("Womp Womp")
+        print(f"The dataset was not {k_value}-anonymous")
 
 
 if __name__ == "__main__":

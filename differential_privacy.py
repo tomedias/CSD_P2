@@ -6,10 +6,9 @@ import pandas as pd
 import sqlite3
 from datetime import datetime
 
-# We chose a low value of 1 for the privacy budget to guarantee strong privacy due to the sensitivity of the data (STIs)
+# We chose a low value of 1 for the privacy budget to guarantee strong privacy due to the sensitivity of the data (STIs information)
 EPSILON = 1.0
 DATE_FORMAT = "%d/%m/%Y"
-
 
 class Sensitivity:
     POSTAL_CODE_SENSITIVITY = 3000
@@ -76,15 +75,15 @@ def sum_education_status(value):
 
 
 def sum_postal_code(value):
-    return laplace_mech(value, Sensitivity.POSTAL_CODE_SENSITIVITY, 0.1)
+    return laplace_mech(value, Sensitivity.POSTAL_CODE_SENSITIVITY, 0.15)#budget allows 6 sequential sums
 
 
 def count(value):
-    return laplace_mech(value, 1, 0.3)
+    return laplace_mech(value, 1, 0.15)#budget allows 6 sequential counts
 
 
 def avg_decease(sum, count_value):
-    return sum_decease(sum) / count(count_value)
+    return sum_decease(sum) / count(count_value)#budget for this operation allows 4 sequential averages
 
 
 def avg_education_status(sum, count_value):
@@ -219,12 +218,20 @@ def execute_commands(conn):
     cursor = conn.cursor()
     command = input()
     while command != "exit":
-        results = execute_query(cursor, command)
-        for row in results:
-            print(row.__dict__)
-        command = input()
-
-
+        if(os.path.isfile("sti_data.db")):
+            try:
+                results = execute_query(cursor, command)
+                for row in results:
+                    print(row.__dict__)
+                command = input()
+            except Exception as e:
+                print(e)
+                conn.close()
+                os.remove("sti_data.db")      
+        else:
+            print(None)
+            command = input()
+    return
 def clip_dataset(data):
     data["Date of Birth"] = pd.to_datetime(
         data["Date of Birth"], format=DATE_FORMAT, errors="coerce"
@@ -240,18 +247,13 @@ def clip_dataset(data):
 
 
 def main(sti_data):
-    try:
+    
         data = pd.read_csv(sti_data)
         clip_dataset(data)
         conn = sqlite3.connect("sti_data.db")
         data.to_sql("sti", conn, if_exists="replace", index=False)
         execute_commands(conn)
-    except Exception as e:
-        print(e)
-    finally:
-        conn.close()
-        os.remove("sti_data.db")
-
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Differential Privacy.")
